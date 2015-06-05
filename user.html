@@ -1,0 +1,37 @@
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script>
+  var socket = io.connect('http://localhost:8080');
+  var currentUser = '';
+
+  socket.on('connect', function(){
+    currentUser = prompt("What's your name?")
+    socket.emit('adduser', currentUser);
+  });
+
+  socket.on('updatechat', function (username, data) {
+    $('.conversation').append('<b>'+username + ':</b> ' + data + '<br>');
+  });
+
+  $(function(){
+    $('.datasend').click( function() {
+      var message = $('.data').val();
+      $('.data').val('');
+      socket.emit('pm', currentUser, 'manager', message);
+    });
+
+    $('.data').keypress(function(e) {
+      if(e.which == 13) {
+        $(this).blur();
+        $('.datasend').focus().click();
+      }
+    });
+  });
+
+</script>
+
+<div style="float:left;width:300px;height:250px;overflow:scroll-y;padding:10px;">
+  <div class="conversation"></div>
+  <input class="data" style="width:200px;" />
+  <input type="button" class="datasend" value="send" />
+</div>

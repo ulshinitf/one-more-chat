@@ -1,0 +1,86 @@
+<style type="text/css">
+  
+  .window {
+    float:left;
+    width:300px;
+    height:250px;
+    overflow:scroll-y;
+    padding:10px;
+    border: 1px solid #0f0;
+    border-radius: 5px;
+  }
+
+  .conversation {
+
+  }
+
+  .data {
+    width:200px;
+  }
+
+  .datasend {
+
+  }
+
+</style>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script>
+  var socket = io.connect('http://localhost:8080');
+
+  socket.on('connect', function() {
+    socket.emit('adduser', 'manager');
+  });
+
+  socket.on('updatechat', function (username, data) {
+    $('#chat').find("[data-username='" + username + "']").append('<b>'+username + ':</b> ' + data + '<br>');
+  });
+
+  socket.on('updateusers', function(data) {
+    $('#users').empty();
+    $.each(data, function(key, value) {
+      $('#users').append('<div>' + key + '</div>');
+    });
+  });
+
+  socket.on('newuser', function (username) {
+    if (username === 'manager') return;
+    var html = "<div class='window'><div class='name'>" + username + "</div><hr><div class='conversation' data-username='" + username + "'></div><input class='data'/><input type='button' class='send' value='send'/></div>";
+    $('#chat').append(html);
+  });
+
+  socket.on('deletechat', function (username) {
+    $('#chat').find("[data-username='" + username + "']").parent().remove();
+  });
+
+  $(function () {
+
+    $('.send').on('click', function() {
+
+
+      console.log(this);
+
+      var name = $(this).parent().find(".conversation").data("username");
+       
+      var message = $('.data').val();
+      $('.data').val('');
+      socket.emit('pm', name, 'manager', message);
+    });
+
+    $('.data').keypress(function(e) {
+      if(e.which == 13) {
+        $(this).blur();
+        $('.datasend').focus().click();
+      }
+    });
+  });
+
+</script>
+<div style="float:left;width:100px;border-right:1px solid black;height:300px;padding:10px;overflow:scroll-y;">
+  <b>USERS</b>
+  <div id="users"></div>
+</div>
+<div id="chat">
+  
+</div>
