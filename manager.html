@@ -28,9 +28,11 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 <script>
   var socket = io.connect('http://localhost:8080');
+  var manager_name;
 
   socket.on('connect', function() {
-    socket.emit('adduser', 'manager');
+    manager_name = '4031_2032';
+    socket.emit('addmanager', manager_name);
   });
 
   socket.on('updatechat', function (username, data, from_manager) {
@@ -50,7 +52,7 @@
   });
 
   socket.on('newuser', function (username) {
-    if (username === 'manager') return;
+    if (username === manager_name) return;
     var html = "<div class='window'><div class='name'>" + username + "</div><hr><div class='conversation' data-username='" + username + "'></div><input class='data'/><input type='button' class='send' value='send'/></div>";
     $('#chat').append(html);
   });
@@ -65,7 +67,7 @@
       var name = $(this).parent().find(".conversation").data("username");
       var message = $('.data').val();
       $('.data').val('');
-      socket.emit('pm', 'manager', name, message);
+      socket.emit('sendmessage', manager_name, name, message);
     });
 
     $('.data').keypress(function(e) {

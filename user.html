@@ -5,8 +5,8 @@
   var currentUser = '';
 
   socket.on('connect', function(){
-    currentUser = prompt("What's your name?")
-    socket.emit('adduser', currentUser);
+    current_user = prompt("What's your name?")
+    socket.emit('adduser', current_user);
   });
 
   socket.on('updatechat', function (username, data) {
@@ -17,7 +17,7 @@
     $('.datasend').click( function() {
       var message = $('.data').val();
       $('.data').val('');
-      socket.emit('pm', currentUser, 'manager', message);
+      socket.emit('pm', current_user, 'manager', message);
     });
 
     $('.data').keypress(function(e) {
