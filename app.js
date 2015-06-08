@@ -4,21 +4,22 @@ var express = require('express')
   , server = http.createServer(app)
   , io = require('socket.io').listen(server);
 
-var Client = function () {
+var User = function () {
   this.name = '';
-  this.manager_name = '';
+  this.email = '';
+  this.manager_login = '';
   this.socket = '';
 };
 
 var Manager = function () {
   this.name = '';
-  this.clients = [];
+  this.login = '';
+  this.Users = [];
   this.socket = '';
-  this.chats = 0;
 };
 
 var managers = {};
-var clients = {};
+var users = {};
 
 server.listen(8080);
 
@@ -40,55 +41,44 @@ io.sockets.on('connection', function (socket) {
     io.sockets.emit('updatechat', socket.username, data);
   });
 
-  socket.on('adduser', function(username) {
+  socket.on('adduser', function(username, user_email) {  
+    var user = new User();
 
-    /*
-    socket.username = username;
-    usernames[username] = username;
-    clients[username] = socket;
-    */
-   
-    var client = new Client();
-    client.name = username;
-    client.manager_name = managers[0];
-    client.socket = socket;
-    clients.push(client);
+    user.name = username;
+    user.email = user_email;
+    user.manager_login = '4031_2032';
+    user.socket = socket;
 
-    io.sockets.emit('updateusers', client.name);
-    managers[client.manager_name].emit('newuser', client.name);
+    users[user_email] = user;
+
+    io.sockets.emit('updateusers', User.name);
+    managers[user.manager_login].socket.emit('newuser', user.name, user.email);
   });
 
-  socket.on('addmanager', function(manager_name) {
+  socket.on('addmanager', function(manager_name, manager_login) {
     var manager = new Manager();
 
     manager.name = manager_name;
+    manager.login = manager_login;
     manager.socket = socket;
 
-    managers.push(manager);
+    managers[manager_login] = manager;
   });
 
-  socket.on('sendmessage', function(client_name, message) {
-      var manager_name;
-
-      for (client in clients) {
-        if (client.name === from) {
-          client.socket.emit('updatechat', socket.username, message);
-          manager_name = client.manager_name;
-          break;
-        };
-      }
-
-      for (manager in managers) {
-        if ( manager.name === manager_name ) {
-          manager.socket.emit('updatechat', socket.username, message);
-        };
-      };
+  socket.on('sendmessage', function(user_email, message) {
+      var manager_login = users[user_email].manager_login;
+      users[user_email].socket.emit('updatechat', message);
+      managers[manager_login].socket.emit('updatechat', users[user_email].name, users[user_email].email, message);
   });
 
   socket.on('disconnect', function() {
-    clients[manager_name].emit('deletechat', socket.username);
-    delete usernames[socket.username];
-    io.sockets.emit('updateusers', usernames);
+    for (var user in users) {
+      if (socket === user.socket) {
+        managers[users.manager_login].socket.emit('deletechat', user.email);
+        delete users[user.email];
+        break;
+      };
+    };
   });
 
 });

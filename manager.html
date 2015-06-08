@@ -31,43 +31,31 @@
   var manager_name;
 
   socket.on('connect', function() {
-    manager_name = '4031_2032';
-    socket.emit('addmanager', manager_name);
+    manager_name = 'manager';
+    manager_login = '4031_2032';
+    socket.emit('addmanager', manager_name, manager_login);
   });
 
-  socket.on('updatechat', function (username, data, from_manager) {
-    if (from_manager) {
-
-    }
-    else {
-      $('#chat').find("[data-username='" + username + "']").append('<b>'+username + ':</b> ' + data + '<br>');
-    }
+  socket.on('updatechat', function (username, user_email, message) {
+    $('#chat').find("[data-usermail='" + user_email + "']").append('<b>'+username + ':</b> ' + message + '<br>');
   });
 
-  socket.on('updateusers', function(data) {
-    $('#users').empty();
-    $.each(data, function(key, value) {
-      $('#users').append('<div>' + key + '</div>');
-    });
-  });
-
-  socket.on('newuser', function (username) {
-    if (username === manager_name) return;
-    var html = "<div class='window'><div class='name'>" + username + "</div><hr><div class='conversation' data-username='" + username + "'></div><input class='data'/><input type='button' class='send' value='send'/></div>";
+  socket.on('newuser', function (username, user_email) {
+    var html = "<div class='window'><div class='name'>" + username + "</div><hr><div class='conversation' data-username='" + username + "' data-usermail='" + user_email + "'></div><input class='data'/><input type='button' class='send' value='send'/></div>";
     $('#chat').append(html);
   });
 
-  socket.on('deletechat', function (username) {
-    $('#chat').find("[data-username='" + username + "']").parent().remove();
+  socket.on('deletechat', function (user_email) {
+    $('#chat').find("[data-usermail='" + usermail + "']").parent().remove();
   });
 
   $(function () {
 
     $('#chat').on('click', '.send', function() {
-      var name = $(this).parent().find(".conversation").data("username");
+      var username = $(this).parent().find(".conversation").data("username");
       var message = $('.data').val();
       $('.data').val('');
-      socket.emit('sendmessage', manager_name, name, message);
+      socket.emit('sendmessage', manager_login, username, message);
     });
 
     $('.data').keypress(function(e) {
@@ -79,10 +67,7 @@
   });
 
 </script>
-<div style="float:left;width:100px;border-right:1px solid black;height:300px;padding:10px;overflow:scroll-y;">
-  <b>USERS</b>
-  <div id="users"></div>
-</div>
+
 <div id="chat">
   
 </div>

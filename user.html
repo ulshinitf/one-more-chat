@@ -2,22 +2,22 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 <script>
   var socket = io.connect('http://localhost:8080');
-  var currentUser = '';
+  var username;
+  var user_email;
+  var regex_mail = /[A-Z0-9._%+-]+@[A-Z0-9.-]+.[A-Z]{2,4}/igm;
 
-  socket.on('connect', function(){
-    current_user = prompt("What's your name?")
-    socket.emit('adduser', current_user);
-  });
-
-  socket.on('updatechat', function (username, data) {
-    $('.conversation').append('<b>'+username + ':</b> ' + data + '<br>');
+  socket.on('updatechat', function (message) {
+    $('.conversation').append('<b>' + username + ':</b> ' + message + '<br>');
   });
 
   $(function(){
+
+    $('.chat_window').hide();
+
     $('.datasend').click( function() {
       var message = $('.data').val();
       $('.data').val('');
-      socket.emit('pm', current_user, 'manager', message);
+      socket.emit('sendmessage', user_email, message);
     });
 
     $('.data').keypress(function(e) {
@@ -26,12 +26,44 @@
         $('.datasend').focus().click();
       }
     });
+
+    $('.user_login_form').on('submit', function(e) {
+      e.preventDefault();
+
+      var name = $(".user_login_form input[name='name']").val();
+      var email = $(".user_login_form input[name='email']").val();
+
+      if (!regex_mail.test(email)) {
+        $(".user_login_form input[name='email']").css({'background':'#f00'});
+        return;
+      };
+
+      username = name;
+      user_email = email;
+
+      socket.emit('adduser', name, email);
+
+      $('.user_login').hide();
+      $('.chat_window').show();
+    });
   });
 
 </script>
 
-<div style="float:left;width:300px;height:250px;overflow:scroll-y;padding:10px;">
-  <div class="conversation"></div>
-  <input class="data" style="width:200px;" />
-  <input type="button" class="datasend" value="send" />
+<div class="window" style="float:left;width:300px;height:250px;overflow:scroll-y;padding:10px;">
+
+  <div class="chat_window">
+    <div class="conversation"></div>
+    <input class="data" style="width:200px;" />
+    <input type="button" class="datasend" value="send" />
+  </div>
+
+  <div class="user_login">
+    <form class="user_login_form">
+      <input type="text" name="name" placeholder="Enter your name" required />
+      <input type="text" name="email" placeholder="Enter your email" required />
+      <input type="submit" value="Start chating!" />
+    </form>
+  </div>
+
 </div>
